@@ -1,0 +1,13 @@
+-c Créer un backup compressée de /home/$USER.
+-r Restaurer les documents.
+-n Nettoyage des archives compressée si la différence entre la taille 
+   des archives et l’espace libre du disque n’excède pas 2 GO.
+-h Afficher le fichier d'aide.
+-g Afficher le menu graphique.
+-m Afficher le menu textuel.
+-s Sauvegarder la liste des fichiers sauvegardés
+   dans un fichier passé en argument.
+-v Afficher la version et les noms des auteurs.
+-o Affiche la liste des fichiers sauvegardés à partir 
+   d’un fichier passé en argument.
+-f Afficher les lignes contenant le MOT_CLE à partir d’ un fichier.

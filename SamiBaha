@@ -1,0 +1,193 @@
+#!/bin/bash
+
+clear
+
+compress()
+{
+	[ ! -e /backup ] && sudo mkdir /backup
+	echo "-c-c-c-"
+
+	sudo tar -cjvf /backup/$USER'_'`date '+%Y-%b-%d-%H-%M-%S'`.tar.bz2 /home/$USER
+}
+
+restore()
+{
+	PS3="CHOOSE A BACKUP:"
+	select BackupName in `ls /backup`
+	do
+		tar -xvf /backup/$BackupName
+		[ ! -e /RestoredBackups ] && sudo mkdir /RestoredBackups
+		sudo mv /home/$USER/home /RestoredBackups/`date '+%Y-%b-%d-%H-%M-%S'`
+
+		exit 0
+	done
+}
+
+Help()
+{
+	cat < /etc/SamiBaha.txt
+}
+
+cleaning()
+{
+	FREESPACE=`df -ht ext4 | cut -d\n -f3 | cut -dG -f3`
+	FREESPACE=${FREESPACE%.0f}
+	CompressedBackupsSpaces=`du -hs /backup | cut -dG -f1`
+	CompressedBackupsSpaces=${CompressedBackupsSpaces%.0f}
+	DIFF=`echo $FREESPACE - $CompressedBackupsSpaces | bc -l`
+	SupOrNot=`echo "$DIFF < 2" | bc`
+
+        echo "------------------FREE SPACE: "$FREESPACE
+        echo "---COMPRESSED BACKUPS SPACES: "$CompressedBackupsSpaces
+	echo "------------------DIFFERENCE: "$DIFF
+
+	if [ $SupOrNot -eq 0 ]
+	then
+		echo "-------------DIFFERENCE > 2G: Nettoyer pas"
+	else
+		sudo rm /backup/*
+	fi
+
+}
+
+menu()
+{
+	PS3="Votre choix:"
+	select item in "-creation backup-" "Restaurer" "-Nettoyage-" "-help-" "-menu graphique-" "-Sauvgarder la list-" "-version-" "-Afficher la liste-" "-Affiche les ligne-" "QUITTER"
+	do
+		case $REPLY in
+		1) ( SamiBaha -c )
+		;;
+		2) ( SamiBaha -r )
+		;;
+		3) ( SamiBaha -n )
+		;;
+		4) ( SamiBaha -h )
+		;;
+		5) ( SamiBaha -g )
+		;;
+		6) read -p "FILE NAME: " FileName ; ( SamiBaha -s $FileName )
+		;;
+		7) ( SamiBaha -v )
+		;;
+		8) read -p "FILE NAME: " FileName ; ( SamiBaha -o $FileName )
+		;;
+		9) read -p "file: " FileName 
+                   read -p "Mot Cle" MotCle
+                   ( SamiBaha -f $FileName -o $MotCle )
+		;;
+		10) exit 0
+		;;
+		esac
+	done
+}
+
+save()
+{
+	FileName=$1
+
+        PS3="CHOOSE A BACKUP:"
+        select BackupName in `ls /backup`
+        do
+		if [ -f $FileName ]
+		then
+			tar -tf /backup/$BackupName > $FileName
+			echo "DONE"
+		else
+			echo "FILE DOESN'T EXIST"
+		fi
+                exit 0
+        done
+}
+
+graphic()
+{
+while :
+do
+	yad --title='Menu' --text='choisir l option' \
+		--button='-c':1 \
+		--button='-r':2 \
+		--button='-n':3 \
+                --button='-h':4 \
+                --button='-m':5 \
+                --button='-s':6 \
+                --button='-v':7 \
+                --button='-o':8 \
+                --button='-f':9 \
+                --button='exit':10 \
+
+	reply=$?
+                case $reply in
+                1) ( SamiBaha -c )
+                ;;
+                2) ( SamiBaha -r )
+                ;;
+                3) ( SamiBaha -n )
+                ;;
+                4) ( SamiBaha -h )
+                ;;
+                5) ( SamiBaha -m )
+                ;;
+                6) read -p "FILE NAME: " FileName ; ( SamiBaha -s $FileName )
+                ;;
+                7) yad --text='			--------VERSION 1.O--------\nAUTORS -BAHA EDDINE KSIB- -SAMI BEN CHAABEN-'
+                ;;
+                8) read -p "FILE NAME: " FileName ; ( SamiBaha -o $FileName )
+                ;;
+                9) read -p "file: " FileName
+		   read -p "Mot Cle" MotCle
+		   ( SamiBaha -f $FileName -o $MotCle )
+                ;;
+                10) exit 0
+                ;;
+                esac
+
+done
+}
+
+version()
+{
+        echo -e "      -VERSION 1.O-\n---- AUTHORS BAHA , SAMI ----"
+}
+
+DisplayFiles()
+{
+	FileName=$1
+	[ -f $FileName ] && cat $FileName || echo "FILE DOESN'T EXIST"
+}
+
+DisplayLine()
+{
+	echo --------------------------
+	grep -i $1 $FileName
+}
+
+main()
+{
+while getopts "c-r-n-h-help-g-m-s:-v-o:-f:" option
+do
+	case $option in
+	c) compress
+	;;
+	r) restore
+	;;
+	n) cleaning
+	;;
+	h | help) Help
+	;;
+	g) graphic
+	;;
+	m) menu
+	;;
+	s) save $OPTARG
+	;;
+	v) version
+	;;
+	o) DisplayFiles $OPTARG
+	;;
+	f) DisplayLine $OPTARG
+	;;
+	esac
+done
+}
+main $@
