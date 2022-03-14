@@ -1,4 +1,4 @@
-# ScriptingMiniProject_2A3
+## ScriptingMiniProject_2A3
 
-Backups Managing Script
+# Backups Managing Script
 SamiBaha.txt SHOULD be in /etc/
